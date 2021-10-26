@@ -1,1 +1,3 @@
 .idea/*
+*.apps.googleusercontent.com.json
+__pycache__/
