@@ -2,7 +2,7 @@ name: Data extraction
 inputs:
 - {name: url, type: String}
 outputs:
-- {name: output_csv, type: Dataset}
+- {name: data, type: Dataset}
 implementation:
   container:
     image: python:3.8
@@ -29,11 +29,11 @@ implementation:
       from kfp.v2.dsl import *
       from typing import *
 
-      def data_extraction(url: str, output_csv: Output[Dataset]):
+      def data_extraction(url: str, data: Output[Dataset]):
           import pandas as pd
 
           df = pd.read_json(url)
-          df.to_csv(output_csv.path, index=False, header=False)
+          df.to_json(data.path)
 
     args:
     - --executor_input
