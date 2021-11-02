@@ -16,7 +16,7 @@ implementation:
           python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip
       fi
 
-      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'scikit-learn' 'huggingface-hub' 'torch' 'kfp==1.8.6' && "$0" "$@"
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'scikit-learn' 'huggingface-hub' 'torch' 'kfp==1.8.7' && "$0" "$@"
     - sh
     - -ec
     - |
@@ -77,8 +77,8 @@ implementation:
           x_train_records = train_data.to_dict('records')
           x_val_records = val_data.to_dict('records')
 
-          x_train = [identify_start_and_end_positions(datum) for datum in x_train_records[0:200]]
-          x_val = [identify_start_and_end_positions(datum) for datum in x_val_records[0:200]]
+          x_train = [identify_start_and_end_positions(datum) for datum in x_train_records]
+          x_val = [identify_start_and_end_positions(datum) for datum in x_val_records]
 
           quality_x_train = [datum for datum in x_train if datum["start_position"] >= 0]
           quality_x_val = [datum for datum in x_val if datum["start_position"] >= 0]
