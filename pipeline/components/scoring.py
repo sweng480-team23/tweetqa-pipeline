@@ -14,6 +14,7 @@ from kfp.v2.dsl import (
         'pandas',
         'numpy',
         'huggingface-hub',
+        'torch',
         'git+https://github.com/Maluuba/nlg-eval.git@master',
         'nltk',
     ],
@@ -26,6 +27,7 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     import json
     import string
     import re
+    import torch
 
     # import nltk
     # nltk.download()
@@ -37,6 +39,16 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     from nlgeval.pycocoevalcap.rouge.rouge import Rouge
     from transformers import BertTokenizerFast
     from transformers import BertForQuestionAnswering
+
+    class TweetQADataset(torch.utils.data.Dataset):
+        def __init__(self, encodings):
+            self.encodings = encodings
+
+        def __getitem__(self, idx):
+            return {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+
+        def __len__(self):
+            return len(self.encodings.input_ids)
 
     # get an answer from the model
     # adapted from colab
@@ -156,15 +168,20 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     # deserialize
     val_encodings = pickle.load(val_file)
 
-    # copy validation set
-    pred_list = val_encodings.copy()
+    # get dataset
+    pred_list = val_dataset(val_encodings)
 
     # load up the trained model
     bert_model = BertForQuestionAnswering.from_pretrained(model.path)
 
+    # print(json.dumps(pred_list))
+
     # have new model answer questions
     for tqa in pred_list:
-        tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+        print("hello")
+        print(json.dumps(tqa))
+        tqa.Answer = answer_tweet_question(bert_model, tqa.Tweet, tqa.Question)
+        # tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # ans = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # if not ans.startswith("[CLS]"):
         #     tqa["Answer"] = ans
