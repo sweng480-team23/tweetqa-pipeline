@@ -9,10 +9,13 @@ from kfp.v2.dsl import (
 
 # TODO - what base image to use?
 @component(
-    base_image='huggingface/transformers-pytorch-gpu',
+    base_image='lwestfall/tqa-scorer',
     packages_to_install=[
         'pandas',
-        'huggingface-hub'
+        'numpy',
+        'huggingface-hub',
+        'git+https://github.com/Maluuba/nlg-eval.git@master',
+        'nltk',
     ],
     output_component_file="component_config/scoring_component.yaml",
 )
@@ -21,42 +24,23 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     import pickle
     import pandas
     import json
+    import string
+    import re
+
+    # import nltk
+    # nltk.download()
+
+    from nltk.translate.bleu_score import sentence_bleu
+    import numpy as np
+
+    from nlgeval.pycocoevalcap.meteor.meteor import Meteor
+    from nlgeval.pycocoevalcap.rouge.rouge import Rouge
     from transformers import BertTokenizerFast
-
-    # get the tokenizer
-    tokenizer = BertTokenizerFast.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
-
-    # open binary serialization of validation set from model_training
-    val_file = open(val.path, 'rb')
-
-    # deserialize
-    val_encodings = pickle.load(val_file)
-
-    # copy validation set
-    pred_list = val_encodings.copy()
-
-    # have new model answer questions
-    for tqa in pred_list:
-        ans = answer_tweet_question(tqa["Tweet"], tqa["Question"])
-        if not ans.startswith("[CLS]"):
-            tqa["Answer"] = ans
-
-    # save to JSON files for evaluate function
-    with open('user_annotations.json', 'w') as f:
-        json.dump(val_encodings, f)
-    with open('pred_annotations.json', 'w') as f:
-        json.dump(pred_list, f)
-
-    # get scores
-    scores = evaluate('pred_annotations.json', 'user_annotations.json')
-
-    # save scores to file
-    with open('scores_out.json', 'w') as f:
-        json.dump(scores, f)
+    from transformers import BertForQuestionAnswering
 
     # get an answer from the model
     # adapted from colab
-    def answer_tweet_question(tweet, question):
+    def answer_tweet_question(bert_model, tweet, question):
         #tokenize question and text as a pair
         input_ids = tokenizer.encode(question, tweet)
 
@@ -77,8 +61,8 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
 
         #model output using input_ids and segment_ids
         # output = bert_model(torch.tensor([input_ids]).to(device), token_type_ids=torch.tensor([segment_ids]).to(device))
-        model.eval()
-        output = model(input_ids=torch.tensor([input_ids]), attention_mask=torch.tensor([segment_ids]))
+        bert_model.eval()
+        output = bert_model(input_ids=torch.tensor([input_ids]), attention_mask=torch.tensor([segment_ids]))
 
         #reconstructing the answer
         answer_start = torch.argmax(output.start_logits)
@@ -100,8 +84,7 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
 
         return answer
 
-    #### Everything from here below is pulled directly from tweetqa_eval.py
-
+    #### pulled directly from tweetqa_eval.py
     def normalize_answer(s):
         """Lower text and remove punctuation, articles and extra whitespace."""
         def remove_articles(text):
@@ -122,6 +105,7 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     meteor_scorer = Meteor()
     rouge_scorer = Rouge()
 
+    #### pulled directly from tweetqa_eval.py
     def ans_score(ans, gold_list):
         ans = normalize_answer(ans)
         gold_list = [normalize_answer(ref) for ref in gold_list]
@@ -130,6 +114,7 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
         rouge, _ = rouge_scorer.compute_score({0:gold_list}, {0:[ans]})
         return {'bleu': bleu, 'meteor':meteor, 'rouge': rouge}
 
+    #### pulled directly from tweetqa_eval.py
     def evaluate(test_annotation_file, user_annotation_file, phase_codename, **kwargs):
         gold_file = test_annotation_file
         pred_file = user_annotation_file
@@ -161,3 +146,38 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
         ]
 
         return output
+
+    # get the tokenizer, might need to switch to the trained model?? not sure
+    tokenizer = BertTokenizerFast.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
+
+    # open binary serialization of validation set from model_training
+    val_file = open(val.path, 'rb')
+
+    # deserialize
+    val_encodings = pickle.load(val_file)
+
+    # copy validation set
+    pred_list = val_encodings.copy()
+
+    # load up the trained model
+    bert_model = BertForQuestionAnswering.from_pretrained(model.path)
+
+    # have new model answer questions
+    for tqa in pred_list:
+        tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+        # ans = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+        # if not ans.startswith("[CLS]"):
+        #     tqa["Answer"] = ans
+
+    # save to JSON files for evaluate function
+    with open('user_annotations.json', 'w') as f:
+        json.dump(val_encodings, f)
+    with open('pred_annotations.json', 'w') as f:
+        json.dump(pred_list, f)
+
+    # get scores
+    scores = evaluate('pred_annotations.json', 'user_annotations.json')
+
+    # save scores to file
+    with open('scores_out.json', 'w') as f:
+        json.dump(scores, f)
