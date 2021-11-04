@@ -7,7 +7,6 @@ from kfp.v2.dsl import (
     Artifact
 )
 
-# TODO - what base image to use?
 @component(
     base_image='lwestfall/tqa-scorer',
     packages_to_install=[
@@ -168,29 +167,25 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     # deserialize
     val_encodings = pickle.load(val_file)
 
-    # get dataset
-    pred_list = val_dataset(val_encodings)
+    # get datasets
+    gold_list = TweetQADataset(val_encodings)
+    val_dataset = TweetQADataset(val_encodings)
 
     # load up the trained model
     bert_model = BertForQuestionAnswering.from_pretrained(model.path)
 
-    # print(json.dumps(pred_list))
-
     # have new model answer questions
-    for tqa in pred_list:
-        print("hello")
-        print(json.dumps(tqa))
-        tqa.Answer = answer_tweet_question(bert_model, tqa.Tweet, tqa.Question)
-        # tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+    for tqa in val_dataset:
+        tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # ans = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # if not ans.startswith("[CLS]"):
         #     tqa["Answer"] = ans
 
     # save to JSON files for evaluate function
     with open('user_annotations.json', 'w') as f:
-        json.dump(val_encodings, f)
+        json.dump(gold_list, f)
     with open('pred_annotations.json', 'w') as f:
-        json.dump(pred_list, f)
+        json.dump(val_dataset, f)
 
     # get scores
     scores = evaluate('pred_annotations.json', 'user_annotations.json')

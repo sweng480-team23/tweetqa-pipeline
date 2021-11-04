@@ -177,29 +177,36 @@ implementation:
           # deserialize
           val_encodings = pickle.load(val_file)
 
-          # get dataset
-          pred_list = val_dataset(val_encodings)
+          # get datasets
+          gold_list = TweetQADataset(val_encodings)
+          val_dataset = TweetQADataset(val_encodings)
 
           # load up the trained model
           bert_model = BertForQuestionAnswering.from_pretrained(model.path)
 
           # print(json.dumps(pred_list))
 
+          # predictions, labels = p
+          # start_preds = np.argmax(predictions[0], axis=-1)
+          # end_preds = np.argmax(predictions[1], axis=-1)
+          # start_labels = labels[0]
+          # end_labels = labels[1]
+
           # have new model answer questions
-          for tqa in pred_list:
-              print("hello")
-              print(json.dumps(tqa))
-              tqa.Answer = answer_tweet_question(bert_model, tqa.Tweet, tqa.Question)
-              # tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+          for tqa in val_dataset:
+              # print("hello")
+              # print(json.dumps(tqa))
+              # tqa.Answer = answer_tweet_question(bert_model, tqa.Tweet, tqa.Question)
+              tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
               # ans = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
               # if not ans.startswith("[CLS]"):
               #     tqa["Answer"] = ans
 
           # save to JSON files for evaluate function
           with open('user_annotations.json', 'w') as f:
-              json.dump(val_encodings, f)
+              json.dump(gold_list, f)
           with open('pred_annotations.json', 'w') as f:
-              json.dump(pred_list, f)
+              json.dump(val_dataset, f)
 
           # get scores
           scores = evaluate('pred_annotations.json', 'user_annotations.json')
