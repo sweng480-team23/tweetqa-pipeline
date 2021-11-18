@@ -174,9 +174,18 @@ def scoring(val: Input[Dataset], model: Input[Model], scores: Output[Model]):
     # load up the trained model
     bert_model = BertForQuestionAnswering.from_pretrained(model.path)
 
+    # simple adapter function, can streamline this if it works
+    # def predict(tqa):
+    #     tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+    #     return tqa
+
     # have new model answer questions
-    for tqa in val_dataset:
-        tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
+    # val_dataset = val_dataset.map(predict)
+
+    outputs = [model(input_ids=data['input_ids'], attention_mask=data['attention_mask']) for data in val_dataset]
+
+    # for tqa in val_dataset:
+    #     tqa["Answer"] = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # ans = answer_tweet_question(bert_model, tqa["Tweet"], tqa["Question"])
         # if not ans.startswith("[CLS]"):
         #     tqa["Answer"] = ans
