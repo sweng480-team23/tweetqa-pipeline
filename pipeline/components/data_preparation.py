@@ -25,7 +25,7 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
     def identify_start_and_end_positions(instance: dict) -> dict:
         tweet = instance["Tweet"].lower()
         question = instance["Question"].lower()
-        answer = instance["Answer"][0].lower()
+        answer = instance["Answer"].lower()
         start_position = tweet.find(answer)
 
         if start_position > -1:

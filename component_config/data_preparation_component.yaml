@@ -77,8 +77,8 @@ implementation:
           x_train_records = train_data.to_dict('records')
           x_val_records = val_data.to_dict('records')
 
-          x_train = [identify_start_and_end_positions(datum) for datum in x_train_records[0:200]]
-          x_val = [identify_start_and_end_positions(datum) for datum in x_val_records[0:200]]
+          x_train = [identify_start_and_end_positions(datum) for datum in x_train_records]
+          x_val = [identify_start_and_end_positions(datum) for datum in x_val_records]
 
           quality_x_train = [datum for datum in x_train if datum["start_position"] >= 0]
           quality_x_val = [datum for datum in x_val if datum["start_position"] >= 0]
