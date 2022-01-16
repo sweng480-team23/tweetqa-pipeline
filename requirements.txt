@@ -7,6 +7,7 @@ charset-normalizer==2.0.6
 clang==5.0
 click==7.1.2
 cloudpickle==2.0.0
+colorama==0.4.4
 cycler==0.10.0
 Deprecated==1.2.13
 docstring-parser==0.12
@@ -80,7 +81,9 @@ tensorflow-estimator==2.6.0
 termcolor==1.1.0
 threadpoolctl==3.0.0
 tokenizers==0.10.3
-torch==1.10.0
+torch==1.10.1+cu113
+torchaudio==0.10.1+cu113
+torchvision==0.11.2+cu113
 tqdm==4.62.3
 transformers==4.11.3
 typer==0.4.0
