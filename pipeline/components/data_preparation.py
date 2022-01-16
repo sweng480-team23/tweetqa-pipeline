@@ -57,8 +57,26 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
 
         encodings.update({'start_positions': start_positions, 'end_positions': end_positions})
 
-    df = pd.read_json(data.path)
-    df["Answer"] = df["Answer"].explode()
+    df_raw = pd.read_json(data.path)
+    prep_arr = []
+
+    # loop thru raw data to create one data point per answer
+    # (some have multiple answers for a given t-q pair)
+    for index, row in df_raw.iterrows():
+        i = 0   # index for the answer, append to qid
+        for answer in row['Answer']:
+            prep_arr.append(
+                {
+                    'Tweet': row['Tweet'],
+                    'Question': row['Question'],
+                    'Answer': answer,
+                    'qid': row['qid'] + '_' + str(i)
+                }
+            )
+            i += 1
+
+    df = pd.DataFrame(prep_arr, columns=['Tweet', 'Question', 'Answer', 'qid'])
+
     train_data, val_data = train_test_split(df, test_size=0.2)
     x_train_records = train_data.to_dict('records')
     x_val_records = val_data.to_dict('records')
