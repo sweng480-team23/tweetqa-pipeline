@@ -4,7 +4,7 @@ from components.data_extraction import data_extraction
 from components.data_preparation import data_preparation
 from components.model_training import model_training
 
-client = kfp.Client(host='https://10faefc376a5300a-dot-us-central1.pipelines.googleusercontent.com')
+client = kfp.Client(host='https://79f549af1655b99d-dot-us-central1.pipelines.googleusercontent.com/')
 
 
 @dsl.pipeline(
