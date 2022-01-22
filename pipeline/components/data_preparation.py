@@ -18,9 +18,31 @@ from kfp.v2.dsl import (
 )
 def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[Dataset]):
     import pandas as pd
+    import regex as re
+    
+    from typing import Tuple
+    from nltk.translate.bleu_score import sentence_bleu
     from sklearn.model_selection import train_test_split
     from transformers import BertTokenizerFast
     import pickle
+
+    def bleu_position_prediction(tweet: str, answer: str) -> Tuple[int, int]:
+        context = re.sub(r'[^\w\s]', '', tweet).split()
+        candidate = re.sub(r'[^\w\s]', '', answer).split()
+        
+        for i in range(0, len(context) - len(candidate)):
+            reference = [context[i:i + len(candidate)]]
+            if sentence_bleu(reference, candidate) > 0:
+                break
+        else:
+            return -1, -1
+        
+        substr = context[i:i + len(candidate)]
+        substr = ' '.join(substr)
+        start_position = tweet.find(substr)
+        end_position = start_position + len(substr)
+        
+        return start_position, end_position
 
     def identify_start_and_end_positions(instance: dict) -> dict:
         tweet = instance["Tweet"].lower()
@@ -31,7 +53,9 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
         if start_position > -1:
             end_position = start_position + len(answer)
         else:
-            end_position = -1
+            start_position, end_position = bleu_position_prediction(tweet, answer)
+        
+        assert start_position <= end_position, f'{start_position} > {end_position}'
 
         return {
             "qid": instance["qid"],

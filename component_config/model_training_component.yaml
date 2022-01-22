@@ -102,6 +102,7 @@ implementation:
               logging_steps=500,
               save_strategy="steps",
               save_steps=500
+
           )
 
           bert_model.train()
