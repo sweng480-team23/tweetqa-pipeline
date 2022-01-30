@@ -12,53 +12,76 @@ from kfp.v2.dsl import (
         'pandas',
         'scikit-learn',
         'huggingface-hub',
-        'torch'
+        'torch',
+        'fuzzywuzzy'
     ],
     output_component_file="component_config/data_preparation_component.yaml"
 )
 def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[Dataset]):
     import pandas as pd
-    import regex as re
     
     from typing import Tuple
-    from nltk.translate.bleu_score import sentence_bleu
     from sklearn.model_selection import train_test_split
     from transformers import BertTokenizerFast
+    from fuzzywuzzy import fuzz, process
     import pickle
 
-    def bleu_position_prediction(tweet: str, answer: str) -> Tuple[int, int]:
-        context = re.sub(r'[^\w\s]', '', tweet).split()
-        candidate = re.sub(r'[^\w\s]', '', answer).split()
+    def lower_case_filter(datum: dict):
+        answer = datum["Answer"].lower()
+        tweet = datum["Tweet"].lower()
+        question = datum["Question"].lower()
         
-        for i in range(0, len(context) - len(candidate)):
-            reference = [context[i:i + len(candidate)]]
-            if sentence_bleu(reference, candidate) > 0:
-                break
+        return {"Answer": answer,
+                "qid": datum["qid"],
+                "Question": question,
+                "Tweet": tweet}
+
+    def fuzzy_match(tweet: str, answer: str) -> Tuple[int, int]:
+        canidates = []
+        tweet_split = tweet.split()
+        answer_split = answer.split()
+        
+        n = len(answer_split)
+        m = len(tweet_split)
+        
+        for i in range(m - n):
+            canidates.append(tweet_split[i:i+n])
+            
+        canidates = [' '.join(canidate) for canidate in canidates] 
+        
+        best_matches = process.extractBests(answer,
+                                            canidates,
+                                            scorer=fuzz.token_sort_ratio,
+                                            score_cutoff=75)
+        
+        if best_matches:
+            best_matches = [(match[1], match[0]) for match in best_matches]
+            best_match = max(best_matches)[1]
+            
+            start_position = tweet.find(best_match)
+            end_position = start_position + len(best_match)
+            
+            return start_position, end_position
         else:
             return -1, -1
         
-        substr = context[i:i + len(candidate)]
-        substr = ' '.join(substr)
-        start_position = tweet.find(substr)
-        end_position = start_position + len(substr)
+    def identify_start_and_end_positions(datum: dict) -> dict:
+        tweet = datum["Tweet"]
+        question = datum["Question"]
+        answer = datum["Answer"]
         
-        return start_position, end_position
-
-    def identify_start_and_end_positions(instance: dict) -> dict:
-        tweet = instance["Tweet"].lower()
-        question = instance["Question"].lower()
-        answer = instance["Answer"].lower()
         start_position = tweet.find(answer)
-
+        
         if start_position > -1:
             end_position = start_position + len(answer)
         else:
-            start_position, end_position = bleu_position_prediction(tweet, answer)
-        
+            start_position, end_position = fuzzy_match(tweet, answer)
+            
+            
         assert start_position <= end_position, f'{start_position} > {end_position}'
-
+        
         return {
-            "qid": instance["qid"],
+            "qid": datum["qid"],
             "tweet": tweet,
             "question": question,
             "answer": answer,
@@ -70,6 +93,7 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
         start_positions = []
         end_positions = []
         for i in range(len(answers)):
+            
             start_positions.append(encodings.char_to_token(i, answers[i]['start_position']))
             end_positions.append(encodings.char_to_token(i, answers[i]['end_position'] - 1))
 
@@ -81,15 +105,24 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
 
         encodings.update({'start_positions': start_positions, 'end_positions': end_positions})
 
+
     df = pd.read_json(data.path)
     df["Answer"] = df["Answer"].explode()
     train_data, val_data = train_test_split(df, test_size=0.2)
-    x_train_records = train_data.to_dict('records')
-    x_val_records = val_data.to_dict('records')
+    x_train = train_data.to_dict('records')
+    x_val = val_data.to_dict('records')
 
-    x_train = [identify_start_and_end_positions(datum) for datum in x_train_records]
-    x_val = [identify_start_and_end_positions(datum) for datum in x_val_records]
 
+    # List of functions we want to call on the data 
+    filters = [lower_case_filter,
+            identify_start_and_end_positions]
+
+    for f in filters:
+        x_train = [f(datum) for datum in x_train]
+        x_val = [f(datum) for datum in x_val]
+
+    non_quality_x_train = [datum for datum in x_train if datum["start_position"] == -1]
+    non_quality_x_val = [datum for datum in x_val if datum["start_position"] == -1]
     quality_x_train = [datum for datum in x_train if datum["start_position"] >= 0]
     quality_x_val = [datum for datum in x_val if datum["start_position"] >= 0]
 
