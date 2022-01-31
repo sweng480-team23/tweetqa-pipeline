@@ -2,5 +2,7 @@
 *.apps.googleusercontent.com.json
 __pycache__/
 component_config/*
+!component_config/.gitkeep
 Pipfile
 Pipfile.lock
+.vscode/
