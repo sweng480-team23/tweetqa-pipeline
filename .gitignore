@@ -1,5 +1,6 @@
 .idea/*
 *.apps.googleusercontent.com.json
 __pycache__/
+component_config/*
 Pipfile
 Pipfile.lock
