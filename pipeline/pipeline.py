@@ -6,7 +6,7 @@ from components.model_training import model_training
 from components.model_scoring import model_scoring
 
 
-client = kfp.Client(host='https://7143347a35085709-dot-us-central1.pipelines.googleusercontent.com')
+client = kfp.Client(host='https://5a64db5a2b2582fd-dot-us-central1.pipelines.googleusercontent.com')
 
 
 @dsl.pipeline(
