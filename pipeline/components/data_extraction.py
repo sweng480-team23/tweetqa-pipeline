@@ -7,11 +7,13 @@ from kfp.v2.dsl import (
 
 @component(
     base_image='python:3.8',
-    packages_to_install=['pandas==1.3.3'],
+    packages_to_install=[
+        'pandas==1.3.3',
+        'git+https://github.com/sweng480-team23/tqa-training-lib.git@main'
+    ],
     output_component_file="component_config/data_extraction_component.yaml"
 )
 def data_extraction(url: str, data: Output[Dataset]):
-    import pandas as pd
+    from tqa_training_lib.data_extraction_lib import extract_data
 
-    df = pd.read_json(url)
-    df.to_json(data.path)
+    extract_data(url).to_json(data.path)
