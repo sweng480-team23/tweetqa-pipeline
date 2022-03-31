@@ -20,7 +20,15 @@ from kfp.v2.dsl import (
     ],
     output_component_file="component_config/model_training_component.yaml",
 )
-def model_training(train: Input[Dataset], val: Input[Dataset], model: Output[Model], logs: Output[Artifact]):
+def model_training(
+        epochs: int,
+        learning_rate: str,
+        batch_size: int,
+        base_model: str,
+        train: Input[Dataset],
+        val: Input[Dataset],
+        model: Output[Model],
+        logs: Output[Artifact]):
     import pickle
 
     train_file = open(train.path, 'rb')
@@ -30,4 +38,12 @@ def model_training(train: Input[Dataset], val: Input[Dataset], model: Output[Mod
     val_encodings = pickle.load(val_file)
 
     from tqa_training_lib.model_training_lib import do_train
-    do_train(train_encodings, val_encodings, model.path, logs.path)
+    do_train(
+        epochs,
+        learning_rate,
+        batch_size,
+        base_model,
+        train_encodings,
+        val_encodings,
+        model.path,
+        logs.path)
