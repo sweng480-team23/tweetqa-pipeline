@@ -20,7 +20,14 @@ from kfp.v2.dsl import (
     ],
     output_component_file="component_config/model_training_component.yaml",
 )
-def model_training(train: Input[Dataset], val: Input[Dataset], model: Output[Model]):
+def model_training(
+        epochs: int,
+        learning_rate: str,
+        batch_size: int,
+        base_model: str,
+        train: Input[Dataset],
+        val: Input[Dataset],
+        model: Output[Model]):
     import pickle
 
     train_file = open(train.path, 'rb')
@@ -33,10 +40,10 @@ def model_training(train: Input[Dataset], val: Input[Dataset], model: Output[Mod
     from tqa_training_lib.trainers.tweetqa_training_args import TweetQATrainingArgs
 
     args = TweetQATrainingArgs(
-        epochs=2,
-        learning_rate=2.9e-5,
-        batch_size=8,
-        base_model='bert-large-uncased-whole-word-masking-finetuned-squad',
+        epochs=epochs,
+        learning_rate=float(learning_rate),
+        batch_size=batch_size,
+        base_model=base_model,
         model_output_path=model.path,
         use_cuda=True
     )

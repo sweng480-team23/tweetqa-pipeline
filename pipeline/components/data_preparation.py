@@ -14,6 +14,7 @@ from kfp.v2.dsl import (
         'huggingface-hub',
         'torch',
         'fuzzywuzzy',
+        'normalise',
         'git+https://github.com/sweng480-team23/tqa-training-lib.git@main',
     ],
     output_component_file="component_config/data_preparation_component.yaml"
