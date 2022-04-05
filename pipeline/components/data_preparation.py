@@ -24,7 +24,7 @@ def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[D
     df = pd.read_json(data.path)
 
     from tqa_training_lib.data_preparation_lib import prepare_data
-    train_encodings, val_encodings = prepare_data(df)
+    train_encodings, val_encodings = prepare_data(df, save_data=False, print_stats=False, for_tf=True)
 
     train_file = open(train.path, 'wb')
     val_file = open(val.path, 'wb')

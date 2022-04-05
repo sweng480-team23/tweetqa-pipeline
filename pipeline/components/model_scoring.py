@@ -20,4 +20,4 @@ from kfp.v2.dsl import (
 )
 def model_scoring(model_loc: Input[Model]):
     from tqa_training_lib.model_scoring_lib import score_model
-    score_model(model_loc.path)
+    score_model(model_loc.path, save_gold_user_files=True, print_scores=True, use_tf=True)
