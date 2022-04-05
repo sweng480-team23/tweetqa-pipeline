@@ -20,7 +20,7 @@
  ### Using the Pipeline Service
  1. There will be a dedicated url you can use to make requests of the service in the Cloud Run console of GCP
  2. Make a `POST` request to `{service-url}/` with the following json body:
-    ```
+ ```
     {
         "epochs": 2,
         "learning_rate": "2.9e-5",
