@@ -10,7 +10,7 @@ from kfp.v2.dsl import (
     base_image='huggingface/transformers-pytorch-gpu',
     packages_to_install=[
         'pandas',
-        'scikit-learn',
+        'scikit-learn==0.22.1',
         'huggingface-hub',
         'torch',
         'fuzzywuzzy',

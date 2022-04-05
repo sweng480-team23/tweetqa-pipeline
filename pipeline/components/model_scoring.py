@@ -9,7 +9,7 @@ from kfp.v2.dsl import (
     base_image='gcr.io/tweetqa-338418/pipeline',
     packages_to_install=[
         'pandas',
-        'scikit-learn',
+        'scikit-learn==0.22.1',
         'huggingface-hub',
         'torch',
         'numpy',
