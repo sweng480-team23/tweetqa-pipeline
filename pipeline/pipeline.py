@@ -1,29 +1,29 @@
-import kfp
 import kfp.dsl as dsl
-from components.data_extraction import data_extraction
-from components.data_preparation import data_preparation
-from components.model_training import model_training
-from components.model_scoring import model_scoring
-
-
-client = kfp.Client(host='https://5a64db5a2b2582fd-dot-us-central1.pipelines.googleusercontent.com')
+from pipeline.components.data_extraction import data_extraction
+from pipeline.components.data_preparation import data_preparation
+from pipeline.components.model_training import model_training
+from pipeline.components.model_scoring import model_scoring
 
 
 @dsl.pipeline(
     name='TweetQA ML Pipeline',
     description='Machine Learning Pipeline for training of models for the TweetQA System'
 )
-def pipeline(url: str):
-    data_extraction_task = data_extraction(url=url)
+def pipeline(
+        epochs: int,
+        learning_rate: str,
+        batch_size: int,
+        base_model: str,
+        last_x_labels: int,
+        include_user_labels: bool
+):
+    data_extraction_task = data_extraction(last_x_labels=last_x_labels, include_user_labels=include_user_labels)
     data_preparation_task = data_preparation(data_extraction_task.outputs['data'])
-    model_training_task = model_training(data_preparation_task.outputs['train'], data_preparation_task.outputs['val'])
+    model_training_task = model_training(
+        epochs=epochs,
+        learning_rate=learning_rate,
+        batch_size=batch_size,
+        base_model=base_model,
+        train=data_preparation_task.outputs['train'],
+        val=data_preparation_task.outputs['val'])
     model_scoring_task = model_scoring(model_training_task.outputs['model'])
-
-
-client.create_run_from_pipeline_func(
-    pipeline,
-    arguments={
-        'url': 'https://raw.githubusercontent.com/sweng480-team23/tweet-qa-data/main/train.json',
-    },
-    mode=dsl.PipelineExecutionMode.V2_COMPATIBLE
-)
