@@ -19,5 +19,7 @@ from kfp.v2.dsl import (
     output_component_file="component_config/model_scoring_component.yaml",
 )
 def model_scoring(model_loc: Input[Model]):
+    import nltk
+    nltk.download('brown')
     from tqa_training_lib.model_scoring_lib import score_model
     score_model(model_loc.path, save_gold_user_files=True, print_scores=True, use_tf=True)
