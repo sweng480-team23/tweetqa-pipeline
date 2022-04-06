@@ -96,7 +96,7 @@ Theano==1.0.5
 threadpoolctl==3.0.0
 tokenizers==0.10.3
 torch==1.10.0
-git+https://github.com/sweng480-team23/tqa-training-lib.git@0e171607ffb61b60f49449ccc5ce64a5eb243944
+git+https://github.com/sweng480-team23/tqa-training-lib.git@sprint-march14th
 tqdm==4.62.3
 transformers==4.11.3
 typer==0.4.0

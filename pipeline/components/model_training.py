@@ -16,7 +16,7 @@ from kfp.v2.dsl import (
         'huggingface-hub',
         'torch',
         'numpy',
-        'git+https://github.com/sweng480-team23/tqa-training-lib.git@main'
+        'git+https://github.com/sweng480-team23/tqa-training-lib.git@sprint-march14th'
     ],
     output_component_file="component_config/model_training_component.yaml",
 )
@@ -36,7 +36,7 @@ def model_training(
     train_encodings = pickle.load(train_file)
     val_encodings = pickle.load(val_file)
 
-    from tqa_training_lib.trainers.tf_tweetqa_trainer import TFTweetQATrainer
+    from tqa_training_lib.trainers.tf_tweetqa_bert_trainer import TFTweetQABertTrainer
     from tqa_training_lib.trainers.tweetqa_training_args import TweetQATrainingArgs
 
     args = TweetQATrainingArgs(
@@ -48,5 +48,5 @@ def model_training(
         use_cuda=True
     )
 
-    trainer = TFTweetQATrainer()
+    trainer = TFTweetQABertTrainer()
     trainer.train(train_encodings, val_encodings, args)
