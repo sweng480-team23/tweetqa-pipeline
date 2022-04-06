@@ -7,7 +7,7 @@ from kfp.v2.dsl import (
 
 
 @component(
-    base_image='huggingface/transformers-pytorch-gpu',
+    base_image='gcr.io/tweetqa-338418/pipeline',
     packages_to_install=[
         'pandas',
         'scikit-learn==0.22.1',
@@ -16,12 +16,16 @@ from kfp.v2.dsl import (
         'fuzzywuzzy',
         'normalise',
         'git+https://github.com/sweng480-team23/tqa-training-lib.git@sprint-march14th',
+        'nltk'
     ],
     output_component_file="component_config/data_preparation_component.yaml"
 )
 def data_preparation(data: Input[Dataset], train: Output[Dataset], val: Output[Dataset]):
     import pickle
     import pandas as pd
+    import nltk
+    nltk.download('brown')
+    nltk.download('names')
     df = pd.read_json(data.path)
 
     from tqa_training_lib.data_preparation_lib import prepare_data

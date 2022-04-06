@@ -1,5 +1,5 @@
 # Tweetqa Pipeline
-### Setting up GCP Pipeline
+## Setting up GCP Pipeline
 1. Create Kubernetes Cluster with following parameters
     * Minimum of 3 nodes
     * Minimum of 2vCPU per node
@@ -12,12 +12,18 @@
 4. Deploy a Pipeline through AI Platform
     * Make sure to select the Kubernetes Cluster, Storage bucket, and SQL instance setup in steps 1-3.
  
- ### Deploying Pipeline Service
+ ## Deploying Pipeline Docker Container to GCP
+ 1. Run `docker build -t gcr.io/tweetqa-338418/pipeline -f TrainingDockerfile .`
+ 2. Run `gcloud auth login`
+ 3. Run `gcloud auth configure-docker`
+ 4. Run `docker push gcr.io/tweetqa-338418/pipeline`   
+ 
+ ## Deploying Pipeline Service
  1. Run `gcloud builds submit` from root directory
  2. Go to permissions, add a new role for `allUsers` with role `Cloud Run Invoker`
  
  
- ### Using the Pipeline Service
+ ## Using the Pipeline Service
  1. There will be a dedicated url you can use to make requests of the service in the Cloud Run console of GCP
  2. Make a `POST` request to `{service-url}/` with the following json body:
  ```
