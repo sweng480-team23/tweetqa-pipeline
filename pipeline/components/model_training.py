@@ -11,6 +11,7 @@ from kfp.v2.dsl import (
 @component(
     base_image='gcr.io/tweetqa-338418/pipeline',
     packages_to_install=[
+        'google-cloud-storage',
         'pandas',
         'scikit-learn==0.22.1',
         'huggingface-hub',
@@ -50,3 +51,15 @@ def model_training(
 
     trainer = TFTweetQABertTrainer()
     trainer.train(train_encodings, val_encodings, args)
+
+    # Upload to GCP Storage Bucket
+    from google.cloud import storage
+    import uuid
+    id: str = uuid.uuid4()
+    storage_client = storage.Client()
+    bucket = storage_client.bucket('tqa-models')
+    blob = bucket.blob(f'{id}/tf_model.h5')
+    blob.upload_from_filename(f'{model.path}/tf_model.h5')
+    blob = bucket.blob(f'{id}/config.json')
+    blob.upload_from_filename(f'{model.path}/config.json')
+
