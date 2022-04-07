@@ -15,7 +15,7 @@ from kfp.v2.dsl import (
         'torch',
         'fuzzywuzzy',
         'normalise',
-        'git+https://github.com/sweng480-team23/tqa-training-lib.git@sprint-march14th',
+        'git+https://github.com/sweng480-team23/tqa-training-lib.git@main',
         'nltk'
     ],
     output_component_file="component_config/data_preparation_component.yaml"

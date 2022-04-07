@@ -14,7 +14,7 @@ from kfp.v2.dsl import (
         'torch',
         'numpy',
         'git+https://github.com/Maluuba/nlg-eval.git@master',
-        'git+https://github.com/sweng480-team23/tqa-training-lib.git@sprint-march14th'
+        'git+https://github.com/sweng480-team23/tqa-training-lib.git@main'
     ],
     output_component_file="component_config/model_scoring_component.yaml",
 )
