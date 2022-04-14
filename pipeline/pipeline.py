@@ -26,4 +26,6 @@ def pipeline(
         base_model=base_model,
         train=data_preparation_task.outputs['train'],
         val=data_preparation_task.outputs['val'])
-    model_scoring_task = model_scoring(model_training_task.outputs['model'])
+    model_scoring_task = model_scoring(
+        model_loc=model_training_task.outputs['model'],
+        cloud_model_url=model_training_task.outputs['output'])

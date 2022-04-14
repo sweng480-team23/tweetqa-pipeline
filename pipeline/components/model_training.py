@@ -28,7 +28,7 @@ def model_training(
         base_model: str,
         train: Input[Dataset],
         val: Input[Dataset],
-        model: Output[Model]):
+        model: Output[Model]) -> str:
     import pickle
 
     train_file = open(train.path, 'rb')
@@ -62,4 +62,5 @@ def model_training(
     blob.upload_from_filename(f'{model.path}/tf_model.h5')
     blob = bucket.blob(f'{id}/config.json')
     blob.upload_from_filename(f'{model.path}/config.json')
+    return f'gs://tqa-models/{id}/'
 
